@@ -112,6 +112,10 @@ class Payment
      */
     private $id;
     /**
+     * @var object
+     */
+    private $receipt;
+    /**
      * @var string
      */
     private $description;
@@ -256,6 +260,7 @@ class Payment
         }
 
         if ($this->id) $params['InvId'] = $this->id;
+        if ($this->receipt)            $params['Receipt']           = $this->receipt;
         if ($this->culture)            $params['Culture']           = $this->culture;
         if ($this->encoding)           $params['Encoding']          = $this->encoding;
         if ($this->email)              $params['Email']             = $this->email;
@@ -283,10 +288,11 @@ class Payment
             throw new EmptySumException();
         }
 
-        return $this->auth->getSignatureValue('{ml}:{ss}:{ii}{:cr}:{pp}{:cp}', [
+        return $this->auth->getSignatureValue('{ml}:{ss}:{ii}{:rc}{:cr}:{pp}{:cp}', [
             'ml' => $this->auth->getMerchantLogin(),
             'ss' => $this->getShopSum(),
             'ii' => $this->id,
+            'rc' => $this->receipt,
             'cr' => $this->currency,
             'pp' => $this->auth->getPaymentPassword(),
             'cp' => $this->getCustomParamsString(),
@@ -592,6 +598,27 @@ class Payment
     public function setCurrency($currency)
     {
         $this->currency = (string)$currency;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReceipt()
+    {
+        // return $this->receipt;
+        return urldecode(json_decode($this->receipt));
+    }
+
+    /**
+     * @param string $receipt
+     *
+     * @return Payment
+     */
+    public function setReceipt($receipt)
+    {
+        $this->receipt = urlencode(json_encode($receipt));
 
         return $this;
     }
